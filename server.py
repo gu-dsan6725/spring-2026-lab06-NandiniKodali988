@@ -16,7 +16,6 @@ import httpx
 import polars as pl
 from mcp.server.fastmcp import FastMCP
 
-
 # =============================================================================
 # CONFIGURATION
 # =============================================================================
@@ -248,7 +247,9 @@ def get_live_indicator(
     try:
         records = _fetch_world_bank_indicator(country_code, indicator, year)
         if not records:
-            return {"error": f"No data found for {indicator} in {year} for country '{country_code}'"}
+            return {
+                "error": f"No data found for {indicator} in {year} for country '{country_code}'"
+            }
         entry = next((r for r in records if r.get("date") == str(year)), records[0])
         return {
             "country": country_code,
@@ -260,7 +261,12 @@ def get_live_indicator(
         }
     except httpx.HTTPStatusError as e:
         logger.error(f"HTTP error fetching indicator: {e}")
-        return {"error": f"Failed to fetch data for country '{country_code}' and indicator '{indicator}'"}
+        return {
+            "error": (
+                f"Failed to fetch data for country '{country_code}'"
+                f" and indicator '{indicator}'"
+            )
+        }
 
 @mcp.tool()
 def compare_countries(
