@@ -118,7 +118,8 @@ def get_countries() -> str:
     """
     df = _load_data()
     # TODO: Implement - return unique country codes and names as JSON string
-    pass
+    countries = df.select(["countryiso3code", "country"]).unique()
+    return countries.write_json()
 
 
 @mcp.resource("data://indicators/{country_code}")
@@ -139,9 +140,12 @@ def get_country_indicators(country_code: str) -> str:
 
     Expected output: JSON array of indicator records for that country
     """
-    df = _load_data()
     # TODO: Implement - filter by country and return as JSON string
-    pass
+    df = _load_data
+    filtered = df.filter(pl.col("countryiso3code") == country_code)
+    if filtered.is_empty():
+        return json.dumps({"error": f"Country code '{country_code}' not found"}, indent=2)
+    return filtered.write_json()
 
 
 # =============================================================================
