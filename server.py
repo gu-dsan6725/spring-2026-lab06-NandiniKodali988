@@ -190,7 +190,21 @@ def get_country_info(country_code: str) -> dict:
     """
     logger.info(f"Fetching country info for: {country_code}")
     # TODO: Implement using _fetch_rest_countries()
-    pass
+    try:
+        data = _fetch_rest_countries(country_code)
+        return {
+            "name": data["name"]["common"],
+            "capital": data["capital"][0] if data.get("capital") else None,
+            "region": data.get("region"),
+            "subregion": data.get("subregion"),
+            "languages": list(data.get("languages", {}).values()),
+            "currencies": list(data.get("currencies", {}).keys()),
+            "population": data.get("population"),
+            "flag": data.get("flag"),
+        }
+    except httpx.HTTPStatusError as e:
+        logger.error(f"HTTP error fetching country info: {e}")
+        return {"error": f"Country code '{country_code}' not found"}
 
 
 @mcp.tool()
@@ -231,8 +245,22 @@ def get_live_indicator(
     """
     logger.info(f"Fetching {indicator} for {country_code} in {year}")
     # TODO: Implement using _fetch_world_bank_indicator()
-    pass
-
+    try:
+        records = _fetch_world_bank_indicator(country_code, indicator, year)
+        if not records:
+            return {"error": f"No data found for {indicator} in {year} for country '{country_code}'"}
+        entry = next((r for r in records if r.get("date") == str(year)), records[0])
+        return {
+            "country": country_code,
+            "country_name": entry["country"]["value"],
+            "indicator": indicator,
+            "indicator_name": entry["indicator"]["value"],
+            "year": entry["date"],
+            "value": entry["value"],
+        }
+    except httpx.HTTPStatusError as e:
+        logger.error(f"HTTP error fetching indicator: {e}")
+        return {"error": f"Failed to fetch data for country '{country_code}' and indicator '{indicator}'"}
 
 @mcp.tool()
 def compare_countries(
@@ -265,7 +293,15 @@ def compare_countries(
     """
     logger.info(f"Comparing {indicator} for countries: {country_codes}")
     # TODO: Implement - call get_live_indicator for each country
-    pass
+    results = []
+    for code in country_codes:
+        try:
+            result = get_live_indicator(code, indicator, year)
+            results.append(result)
+        except Exception as e:
+            logger.error(f"Error comparing country '{code}': {e}")
+            results.append({"country": code, "error": str(e)})
+    return results
 
 
 # =============================================================================
