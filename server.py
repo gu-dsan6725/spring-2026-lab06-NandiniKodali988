@@ -141,7 +141,7 @@ def get_country_indicators(country_code: str) -> str:
     Expected output: JSON array of indicator records for that country
     """
     # TODO: Implement - filter by country and return as JSON string
-    df = _load_data
+    df = _load_data()
     filtered = df.filter(pl.col("countryiso3code") == country_code)
     if filtered.is_empty():
         return json.dumps({"error": f"Country code '{country_code}' not found"}, indent=2)
